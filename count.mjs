@@ -51,7 +51,9 @@ client.once('message', (data) => {
           console.log(`Total: ${total}, Aiken's: ${n} (at ${result.block.slot})`);
         }
 
-        if ((tx.collaterals || []).length > 0) {
+        const hasCollateral = (tx.collaterals || []).length > 0;
+
+        if (hasCollateral || tx.outputs.some(isScriptAddress)) {
           total += 1;
           if (hasAikenValidator(tx.mint) || hasAikenValidator(tx.scripts) || tx.outputs.some(useAikenValidator)) {
             n += 1;
