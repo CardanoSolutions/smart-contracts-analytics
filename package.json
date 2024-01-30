@@ -1,0 +1,15 @@
+{
+  "name": "aiken-analytics",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.mjs",
+  "author": "",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "bech32": "^2.0.0",
+    "ws": "^8.14.2"
+  },
+  "scripts": {
+    "start": "node index.mjs"
+  }
+}

@@ -1,0 +1,9 @@
+[package]
+name = "aiken-analytics"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+flat-rs = "1.0.20-alpha"
+hex = "0.4.3"
+uplc = "1.0.20-alpha"
