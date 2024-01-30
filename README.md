@@ -16,9 +16,18 @@ Adjust the `.envrc` to select a different NETWORK or Ogmios' source.
 
 The scripts expect some specific data files to be available under `data`:
 
-- `data/{NETWORK}/scripts` should contain a list of base16-encoded UPLC scripts, one per line. The list may comes from various data-source such as Kupo, Oura or even Ogmios.
+- `data/{NETWORK}/scripts.csv` should contain a list of base16-encoded UPLC scripts with their hash digests, one per line.
 
 - `data/aiken_validators.json` is produced from running the Rust script. It isn't network specific and ideally comes from aggregating data from all networks.
+
+### Collecting mainnet scripts
+
+> [!WARNING]
+> Takes a while.
+
+```
+yarn collect > scripts.csv
+```
 
 ### Identifying Aiken validators
 
@@ -29,5 +38,5 @@ cargo run --release > aiken_validators.json
 ### Counting scripts usage on-chain
 
 ```
-yarn start
+yarn count
 ```

@@ -4,6 +4,7 @@ import * as fs from 'fs';
 
 const NETWORK = process.env['NETWORK'];
 const OGMIOS_HOST = process.env['OGMIOS_HOST'];
+const POINTS = JSON.parse(fs.readFileSync('config/starting-points.json'));
 
 const AIKEN_VALIDATORS = JSON
   .parse(fs.readFileSync(`./data/aiken_validators.json`))
@@ -18,48 +19,18 @@ client.rpc = function rpc(method, params = {}) {
     method,
     params,
   }));
-}
+};
 
 client.on('open', () => {
-  // Intersection points correspond roughly to the beginning of April when Aiken's alpha
-  // release came out.
-  switch (NETWORK) {
-    case 'mainnet':
-      client.rpc(
-        'findIntersection',
-        {
-          points: [{
-            slot: 89856876,
-            id: 'f51440b362ace1e72977c4d4f758635b55aaccc212fb3110977c59a3ef7c0055'
-          }]
-        }
-      );
-      break;
-    case 'preprod':
-      client.rpc(
-        'findIntersection',
-        {
-          points: [{
-            slot: 25426067,
-            id: 'd2a3c9960caa23411e930e9dc8948b6192c57e0015ba8498a271b41f12c5711d'
-          }]
-        }
-      );
-      break;
-    case 'preview':
-      client.rpc(
-        'findIntersection',
-        {
-          points: [{
-            slot: 14691585,
-            id: 'cb30efdbae18c9cccfbf453821b7724b5a1ab9dd0c86154782217a65555e2517'
-          }]
-        }
-      );
-      break;
-    default:
-      throw new Error(`Unrecognized NETWORK env: ${NETWORK}`);
+  const point = POINTS[NETWORK.toLowerCase()];
+
+  if (!point) {
+    throw new Error(`No configuration for NETWORK: ${NETWORK}`);
   }
+
+  // Intersection points correspond roughly to the beginning of April when
+  // Aiken's alpha release came out.
+  client.rpc('findIntersection', { points: [point] });
 });
 
 client.once('message', (data) => {

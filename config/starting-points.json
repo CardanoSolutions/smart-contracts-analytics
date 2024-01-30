@@ -1,0 +1,14 @@
+{
+  "mainnet": {
+    "slot": 89856876,
+    "id": "f51440b362ace1e72977c4d4f758635b55aaccc212fb3110977c59a3ef7c0055"
+  },
+  "preprod": {
+    "slot": 25426067,
+    "id": "d2a3c9960caa23411e930e9dc8948b6192c57e0015ba8498a271b41f12c5711d"
+  },
+  "preview": {
+    "slot": 14691585,
+    "id": "cb30efdbae18c9cccfbf453821b7724b5a1ab9dd0c86154782217a65555e2517"
+  }
+}

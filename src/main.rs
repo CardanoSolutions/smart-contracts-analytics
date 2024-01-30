@@ -17,17 +17,20 @@ fn main() {
     ];
 
     let filename = format!(
-        "./data/{}/scripts",
+        "./data/{}/scripts.csv",
         env::var("NETWORK").expect("Missing ENV var 'NETWORK'")
     );
 
+    let mut is_first_validator = true;
+
     if let Ok(lines) = read_lines(filename) {
-        for (i, row) in lines.into_iter().flatten().enumerate() {
+        for row in lines.into_iter().flatten() {
             let hash: String = row.chars().take(56).collect();
-            let cbor: String = row.chars().skip(59).collect();
+            let cbor: String = row.chars().skip(57).collect();
             if is_aiken(&cbor, &markers) {
-                let delim = if i == 0 { "[" } else { "," };
+                let delim = if is_first_validator { "[" } else { "," };
                 println!("{delim} \"{hash}\"");
+                is_first_validator = false;
             }
         }
     }
