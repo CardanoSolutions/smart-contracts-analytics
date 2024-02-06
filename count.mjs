@@ -6,9 +6,8 @@ const NETWORK = process.env['NETWORK'];
 const OGMIOS_HOST = process.env['OGMIOS_HOST'];
 const POINTS = JSON.parse(fs.readFileSync('config/starting-points.json'));
 
-const AIKEN_VALIDATORS = JSON
-  .parse(fs.readFileSync(`./data/aiken_validators.json`))
-  .reduce((obj, v) => { obj[v] = true; return obj }, {});
+const AIKEN_VALIDATORS = new Set(JSON.parse(fs.readFileSync(`./data/aiken_validators.json`)));
+const NATIVE_SCRIPTS = new Set(JSON.parse(fs.readFileSync(`./data/native_scripts.json`)));
 
 const client = new WebSocket(OGMIOS_HOST);
 
@@ -35,6 +34,7 @@ client.on('open', () => {
 
 client.once('message', (data) => {
   let total = 0;
+  let totalNative = 0;
   let previousTotal = total;
   let n = 0;
 
@@ -47,8 +47,8 @@ client.once('message', (data) => {
       result.block.transactions.forEach(tx => {
         // Show some progress at regular intervals
         if (total % 1000 === 0 && total > previousTotal) {
+          notify(result.block);
           previousTotal = total;
-          console.log(`Total: ${total}, Aiken's: ${n} (at ${result.block.slot})`);
         }
 
         const hasCollateral = (tx.collaterals || []).length > 0;
@@ -58,11 +58,16 @@ client.once('message', (data) => {
           if (hasAikenValidator(tx.mint) || hasAikenValidator(tx.scripts) || tx.outputs.some(useAikenValidator)) {
             n += 1;
           }
+
+          // Transaction only sending to script addresses that are known native scripts.
+          if (!hasCollateral && tx.outputs.filter(isScriptAddress).every(isNativeScript)) {
+            totalNative += 1;
+          }
         }
       });
 
       if (result.block.slot >= tip) {
-        console.log(`Total: ${total}, Aiken's: ${n} (at ${result.block.slot})`);
+        notify(result.block);
         process.exit(0);
       }
     }
@@ -70,6 +75,11 @@ client.once('message', (data) => {
     client.rpc('nextBlock');
   });
 
+  function notify({ slot }) {
+    const t = total - totalNative;
+    const p = Math.round(10000 * n / t) / 100;
+    console.log(`Total: ${t}, Aiken's: ${n} (${p}%) / at ${slot})`);
+  }
 
   // Fill in the initial queue to leverage pipelining.
   for (let i = 0; i < 100; i += 1) { client.rpc('nextBlock'); }
@@ -82,15 +92,23 @@ function isScriptAddress({ address }) {
   });
 }
 
+function isNativeScript({ address }) {
+  return withShelleyAddress(address, false, (bytes) => {
+    const payment_part = bytes.slice(1, 29).toString('hex');
+    const delegation_part = bytes.slice(29).toString('hex');
+    return NATIVE_SCRIPTS.has(payment_part) || NATIVE_SCRIPTS.has(delegation_part);
+  });
+}
+
 function hasAikenValidator(scripts = {}) {
-  return Object.keys(scripts).some(k => AIKEN_VALIDATORS[k]);
+  return Object.keys(scripts).some(k => AIKEN_VALIDATORS.has(k));
 }
 
 function useAikenValidator({ address }) {
   return withShelleyAddress(address, false, (bytes) => {
     const payment_part = bytes.slice(1, 29).toString('hex');
     const delegation_part = bytes.slice(29).toString('hex');
-    return AIKEN_VALIDATORS[payment_part] || AIKEN_VALIDATORS[delegation_part];
+    return AIKEN_VALIDATORS.has(payment_part) || AIKEN_VALIDATORS.has(delegation_part);
   });
 }
 

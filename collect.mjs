@@ -30,7 +30,7 @@ client.on('open', () => {
 });
 
 client.once('message', (data) => {
-  let store = {};
+  let store = new Set();
 
   const tip = JSON.parse(data).result.tip.slot;
 
@@ -54,8 +54,8 @@ client.once('message', (data) => {
 
         // Print out possible candidates, with their digest.
         Object.keys(scripts).forEach(digest => {
-          if (store[digest]) { return; }
-          store[digest] = true;
+          if (store.has(digest)) { return; }
+          store.add(digest);
           const { language, cbor } = scripts[digest];
           if (language === 'plutus:v2') {
             console.log(`${digest},${cbor}`);
