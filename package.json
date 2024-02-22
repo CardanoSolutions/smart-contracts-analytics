@@ -9,9 +9,5 @@
     "bech32": "^2.0.0",
     "blake2b": "^2.1.4",
     "ws": "^8.14.2"
-  },
-  "scripts": {
-    "count": "node count.mjs",
-    "collect": "node collect.mjs"
   }
 }

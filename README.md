@@ -10,33 +10,22 @@
 
 ### Environment
 
-Adjust the `.envrc` to select a different NETWORK or Ogmios' source.
-
-### Data
-
-The scripts expect some specific data files to be available under `data`:
-
-- `data/{NETWORK}/scripts.csv` should contain a list of base16-encoded UPLC scripts with their hash digests, one per line.
-
-- `data/aiken_validators.json` is produced from running the Rust script. It isn't network specific and ideally comes from aggregating data from all networks.
+Adjust the `.envrc` to select Ogmios' source.
 
 ### Collecting mainnet scripts
 
-> [!WARNING]
-> Takes a while.
-
 ```
-yarn collect > scripts.csv
+node collect-plutus-scripts.mjs > scripts.csv
 ```
 
 ### Identifying Aiken validators
 
 ```
-cargo run --release > aiken_validators.json
+cargo run --release scripts.csv > validators.json
 ```
 
 ### Counting scripts usage on-chain
 
 ```
-yarn count
+node count.mjs
 ```
