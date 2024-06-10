@@ -86,7 +86,7 @@ let timeline = {
   [KIND.PLUTUSTX]: [],
   [KIND.PLUTS]: [],
   [KIND.NATIVE]: [],
-  total: [],
+  epochs: [],
 };
 
 let previousInteractions = { total: 0 };
@@ -132,10 +132,10 @@ client.once('message', (data) => {
         fs.writeFileSync(`./unknowns-${start.slot}:${tip}.json`, JSON.stringify(Array.from(unknowns), null, 2));
         console.log(`${unknowns.size} unknown script hashes?`);
         console.log('\n');
-        const epochs = (new Array(timeline.total.length)).fill(0).map((_, ix) => ix + FIRST_SHELLEY_EPOCH);
+        const epochs = (new Array(timeline.epochs.length)).fill(0).map((_, ix) => ix + getEpoch(start.slot));
         console.log(['framework', 'logo'].concat(epochs).join(', '));
         for (let lang in timeline) {
-          if (lang === 'total' || lang === 'native') { continue; }
+          if (lang === 'epochs' || lang === 'native') { continue; }
           console.log([lang, LOGO[lang]].concat(timeline[lang]).join(', '));
         }
         process.exit(0);
@@ -154,9 +154,10 @@ client.once('message', (data) => {
 
       for (let lang in transactions) {
         if (lang === 'total') { continue; }
-        timeline[lang].push(transactions[lang] - previousTransactions[lang]);
+        timeline[lang].push(transactions[lang] - (previousTransactions[lang] ?? 0));
       }
-      timeline.total.push(currentEpoch);
+
+      timeline.epochs.push(currentEpoch);
 
       previousTransactions = { ...transactions };
       previousInteractions = { ...interactions };
@@ -164,7 +165,9 @@ client.once('message', (data) => {
 
     transactions['_'] = transactions.total - countFilter(transactions, k => k != 'total');
 
-    const p = (source, kind) => Math.round(10000 * source[kind] / source.total) / 100;
+    const total = transactions.total - transactions[KIND.NATIVE];
+
+    const p = (source) => Math.round(10000 * source / total) / 100;
 
     const display = (kind, title) => {
       return {
@@ -172,7 +175,7 @@ client.once('message', (data) => {
         text: [
           title.padEnd(10, ' '),
           String(transactions[kind]).padStart(12, ' '),
-          `(${p(transactions, kind).toFixed(2).padStart(5, ' ')}%)`,
+          `(${p(transactions[kind]).toFixed(2).padStart(5, ' ')}%)`,
         ].join(' '),
       };
     };
@@ -185,12 +188,11 @@ client.once('message', (data) => {
       display(KIND.MARLOWE, 'Marlowe:'),
       display(KIND.OPSHIN, 'OpShin:'),
       display(KIND.PLUTS, 'Plu-ts:'),
-      display(KIND.NATIVE, 'Native:'),
     ] .sort((a, b) => b.score - a.score)
       .concat([
         display('_', 'Unsure:'),
         { text: ''.padStart(32, '=') },
-        { text: `Total:${String(transactions.total).padStart(17, ' ')}` },
+        { text: `Total:${String(total).padStart(17, ' ')}` },
       ])
       .map(({ text }) => text)
       .join('\n  ');
