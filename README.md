@@ -1,4 +1,4 @@
-# Aiken Analytics
+# Smart Contract Analytics
 
 ## Getting Started
 
