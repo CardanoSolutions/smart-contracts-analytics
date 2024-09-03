@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as points from './config/points.mjs';
 
-export const SINCE = points.beginningOfJune2024;
+export const SINCE = points.?;
 
 export const UNTIL = null;
 
