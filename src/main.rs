@@ -304,6 +304,8 @@ fn main() {
         "28bbd1f7aebb3bc59e13597f333aeefb8f5ab78eda962de1d605b388",
         "ab658d65b5717bf07bd3b1a9ad28d31c183811bba4076aeace9feb8e",
         "0c70d8047139103546f0e76aafecfdf0667cbb397c8976f40ae8fcb3",
+        "cd2333712262ca401b81605f6ae44a58fdb656f0af32d00598d716e3",
+        "8faf20cd4d98e4d5fe8a1e0c966a7c49e103610d582cc1e1cc5b1e35",
     ]);
 
     let mut is_first_validator = true;

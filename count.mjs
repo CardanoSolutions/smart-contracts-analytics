@@ -1,12 +1,16 @@
 import * as fs from 'fs';
-import * as points from './config/points.mjs';
 import blake2b from 'blake2b';
 import WebSocket from 'ws';
 import { bech32 } from 'bech32';
+import {
+  NATIVE_SCRIPTS,
+  OGMIOS_HOST,
+  REFERENCE_SCRIPTS,
+  SINCE,
+  UNTIL,
+  VALIDATORS,
+} from './config.mjs';
 
-const VALIDATORS = new Map(JSON.parse(fs.readFileSync(`./data/validators.json`)));
-const NATIVE_SCRIPTS = new Set(JSON.parse(fs.readFileSync(`./data/native_scripts.json`)));
-const REFERENCE_SCRIPTS = new Map(JSON.parse(fs.readFileSync(`./data/reference_scripts.json`)));
 const KIND = {
   AIKEN: "aiken",
   PLUTARCH: "plutarch",
@@ -28,22 +32,6 @@ const LOGO = {
   [KIND.MARLOWE]: "https://raw.githubusercontent.com/aiken-lang/site/main/public/cardano-smart-contract-frameworks/marlowe.png",
 };
 
-/******************************************************************************
- *
- * CONFIGURATION
- *
- *****************************************************************************/
-
-const start = points.aikenAlphaLaunch;
-const stop = null;
-const OGMIOS_HOST = process.env['OGMIOS_HOST'];
-
-const FIRST_SHELLEY_EPOCH = 208;
-const FIRST_SHELLEY_SLOT = 4492800;
-const EPOCH_LENGTH = 432000;
-
-/*****************************************************************************/
-
 const client = new WebSocket(OGMIOS_HOST);
 
 // Strawman JSON-RPC 2.0 client
@@ -56,7 +44,7 @@ client.rpc = function rpc(method, params = {}) {
 };
 
 client.on('open', () => {
-  client.rpc('findIntersection', { points: [start] });
+  client.rpc('findIntersection', { points: [SINCE] });
 });
 
 let unknowns = new Set();
@@ -90,12 +78,13 @@ let timeline = {
 };
 
 let previousInteractions = { total: 0 };
+
 let previousTransactions = { total: 0 };
 
 let previousEpoch = null;
 
 client.once('message', (data) => {
-  const tip = (stop || JSON.parse(data).result.tip).slot;
+  const tip = (UNTIL || JSON.parse(data).result.tip).slot;
 
   client.on('message', (data) => {
     const result = JSON.parse(data).result;
@@ -129,10 +118,10 @@ client.once('message', (data) => {
       if (result.block.slot >= tip) {
         previousEpoch = Number.NEGATIVE_INFINITY;
         notify(result.block);
-        fs.writeFileSync(`./unknowns-${start.slot}:${tip}.json`, JSON.stringify(Array.from(unknowns), null, 2));
+        fs.writeFileSync(`./unknowns-${SINCE.slot}:${tip}.json`, JSON.stringify(Array.from(unknowns), null, 2));
         console.log(`${unknowns.size} unknown script hashes?`);
         console.log('\n');
-        const epochs = (new Array(timeline.epochs.length)).fill(0).map((_, ix) => ix + getEpoch(start.slot));
+        const epochs = (new Array(timeline.epochs.length)).fill(0).map((_, ix) => ix + getEpoch(SINCE.slot));
         console.log(['framework', 'logo'].concat(epochs).join(', '));
         for (let lang in timeline) {
           if (lang === 'epochs' || lang === 'native') { continue; }
@@ -197,7 +186,7 @@ client.once('message', (data) => {
       .map(({ text }) => text)
       .join('\n  ');
 
-    const completion = Math.floor(16 * (slot - start.slot) / (tip - start.slot));
+    const completion = Math.floor(16 * (slot - SINCE.slot) / (tip - SINCE.slot));
     const progress = '>'.padStart(completion + 1, '=').padEnd(17, ' ');
 
     console.log(`(at ${slot}) [${progress}]\n${''.padStart(22, ' ')}TRANSACTIONS\n  ${''.padStart(32, '=')}\n  ${summary}\n\n`);
@@ -353,5 +342,8 @@ function countFilter(obj, predicate) {
 }
 
 function getEpoch(slot) {
+  const FIRST_SHELLEY_EPOCH = 208;
+  const FIRST_SHELLEY_SLOT = 4492800;
+  const EPOCH_LENGTH = 432000;
   return FIRST_SHELLEY_EPOCH + Math.floor((slot - FIRST_SHELLEY_SLOT) / EPOCH_LENGTH);
 }

@@ -1,20 +1,6 @@
-import * as fs from 'fs';
-import * as points from './config/points.mjs';
 import blake2b from 'blake2b';
 import WebSocket from 'ws';
-
-/******************************************************************************
- *
- * CONFIGURATION
- *
- *****************************************************************************/
-
-const since = points.aikenAlphaLaunch;
-const until = null;
-const OGMIOS_HOST = process.env['OGMIOS_HOST'];
-const NATIVE_SCRIPTS = new Set(JSON.parse(fs.readFileSync(`./data/native_scripts.json`)));
-
-/*****************************************************************************/
+import { UNTIL, SINCE, OGMIOS_HOST, NATIVE_SCRIPTS } from './config.mjs';
 
 const client = new WebSocket(OGMIOS_HOST);
 
@@ -28,7 +14,7 @@ client.rpc = function rpc(method, params = {}) {
 };
 
 client.on('open', () => {
-  client.rpc('findIntersection', { points: [since] });
+  client.rpc('findIntersection', { points: [SINCE] });
 });
 
 client.once('message', (data) => {
@@ -37,7 +23,7 @@ client.once('message', (data) => {
   let n = null;
   let m = null;
 
-  const tip = (until || JSON.parse(data).result.tip).slot;
+  const tip = (UNTIL || JSON.parse(data).result.tip).slot;
 
   client.on('message', (data) => {
     const result = JSON.parse(data).result;
@@ -45,15 +31,15 @@ client.once('message', (data) => {
     if (result.direction === 'forward') {
       n += 1;
 
-      if (n % 50000 === 0 && n > m) {
-        const progress = 100 * (result.block.slot - since.slot) / (tip - since.slot);
+      if (n % 10000 === 0 && n > m) {
+        const progress = 100 * (result.block.slot - SINCE.slot) / (tip - SINCE.slot);
         console.error(`At slot ${result.block.slot} (${progress.toFixed(2)}%)`);
         m = n;
       }
 
       result.block.transactions.forEach(tx => {
         // Gather scripts from outputs & witnesses
-        const scripts = tx.outputs.reduce((acc, out) => {
+        const scripts = (tx.outputs ?? []).reduce((acc, out) => {
           if (out.script && out.script.language !== 'native') {
             const tag = Number.parseInt(out.script.language.slice(-1), 10);
             const msg = Buffer.concat([

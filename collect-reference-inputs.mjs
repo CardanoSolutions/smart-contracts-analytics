@@ -1,19 +1,6 @@
-import * as fs from 'fs';
 import WebSocket from 'ws';
 import blake2b from 'blake2b';
-import * as points from './config/points.mjs';
-
-/******************************************************************************
- *
- * CONFIGURATION
- *
- *****************************************************************************/
-
-const since = points.beginningOfBabbage;
-const until = null;
-const OGMIOS_HOST = process.env['OGMIOS_HOST'];
-
-/*****************************************************************************/
+import { SINCE, UNTIL, OGMIOS_HOST } from './config.mjs';
 
 const client = new WebSocket(OGMIOS_HOST);
 
@@ -27,7 +14,7 @@ client.rpc = function rpc(method, params = {}) {
 };
 
 client.on('open', () => {
-  client.rpc('findIntersection', { points: [since] });
+  client.rpc('findIntersection', { points: [SINCE] });
 });
 
 client.once('message', (data) => {
@@ -37,7 +24,7 @@ client.once('message', (data) => {
   let m = null;
   let separator = '[';
 
-  const tip = (until || JSON.parse(data).result.tip).slot;
+  const tip = (UNTIL || JSON.parse(data).result.tip).slot;
 
   client.on('message', (data) => {
     const result = JSON.parse(data).result;
@@ -46,7 +33,7 @@ client.once('message', (data) => {
       n += 1;
 
       if (n % 10000 === 0 && n > m) {
-        const progress = 100 * (result.block.slot - since.slot) / (tip - since.slot);
+        const progress = 100 * (result.block.slot - SINCE.slot) / (tip - SINCE.slot);
         console.error(`At slot ${result.block.slot} (${progress.toFixed(2)}%)`);
         m = n;
       }
