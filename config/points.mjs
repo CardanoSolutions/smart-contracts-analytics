@@ -47,3 +47,13 @@ export const beginningOfAugust2024 = {
   slot: 130897428,
   id: "6293a780fff4d8f451cfbad263c4db5e73dc0252035828eb6ba901a2efb4384d"
 };
+
+export const beginningOfSeptember2024 = {
+  slot: 133575396,
+  id: "b8e9f347fdba6ad903d97d6c18ba95281d68b19004da5b42d3fb1244b997274b"
+};
+
+export const beginningOfOctober2024 = {
+  slot: 136167315,
+  id: "8fb0c8b7e292ee66b2ae99bbf86a753dc2af1dc55e4ce54898b4381ca23b68e0"
+};

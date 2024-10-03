@@ -47,7 +47,7 @@ client.once('message', (data) => {
               Buffer.from(out.script.cbor, 'hex'),
             ]);
             const digest = blake2b(28).update(msg).digest('hex');
-            console.log(`${separator} [ "${tx.id}#${ix}", "${digest}" ]\n`)
+            console.log(`${separator} [ "${tx.id}#${ix}", "${digest}" ]`)
             separator = ','
           }
         });

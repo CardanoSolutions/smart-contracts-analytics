@@ -21,7 +21,6 @@ client.once('message', (data) => {
   let store = new Set();
 
   let n = null;
-  let m = null;
 
   const tip = (UNTIL || JSON.parse(data).result.tip).slot;
 
@@ -30,12 +29,6 @@ client.once('message', (data) => {
 
     if (result.direction === 'forward') {
       n += 1;
-
-      if (n % 10000 === 0 && n > m) {
-        const progress = 100 * (result.block.slot - SINCE.slot) / (tip - SINCE.slot);
-        console.error(`At slot ${result.block.slot} (${progress.toFixed(2)}%)`);
-        m = n;
-      }
 
       result.block.transactions.forEach(tx => {
         // Gather scripts from outputs & witnesses
@@ -68,7 +61,7 @@ client.once('message', (data) => {
           if (language !== 'native') {
             console.log(`${digest},${cbor}`);
           } else {
-            console.error(`"${digest}",`);
+            console.error(`, "${digest}"`);
           }
         });
       });
