@@ -57,3 +57,13 @@ export const beginningOfOctober2024 = {
   slot: 136167315,
   id: "8fb0c8b7e292ee66b2ae99bbf86a753dc2af1dc55e4ce54898b4381ca23b68e0"
 };
+
+export const beginningOfNovember2024 = {
+  slot: 138849313,
+  id: "f98feb1633f865c0b6ee03f38fe0a3051b2e3ac90f967ef576238643332155b7"
+};
+
+export const beginningOfDecember2024 = {
+  slot: 141441315,
+  id: "ee88305bb38e6ff37a2bc39a37c7c361ac25dd8daadff85801a075ec39cce27f"
+};

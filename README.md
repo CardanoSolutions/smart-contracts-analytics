@@ -12,27 +12,29 @@
 
 Adjust the `.envrc` to select Ogmios' source.
 
+> [!CAUTION]
+> Ogmios needs to be running with the `--include-cbor` flag set.
+
 ### Collecting mainnet scripts
 
 ```
-node collect-plutus-scripts.mjs 1>plutus_scripts.csv 2>native_scripts.json
+node collect-plutus-scripts.mjs 1>data/plutus_scripts.csv 2>data/native_scripts.json
 ```
 
 ### Collecting reference inputs
 
 ```
-node collect-reference-inputs.mjs 1>reference_inputs.json
+node collect-reference-inputs.mjs 1>data/reference_inputs.json
 ```
 
 ### Classifying validators
 
 ```
-cargo run --release plutus_scripts.csv > validators.json
+cargo run --release -- data/plutus_scripts.csv 1>data/validators.json
 ```
-
 
 ### Counting scripts usage on-chain
 
 ```
-node count.mjs validators.json native_scripts.json reference_inputs.json
+node count.mjs
 ```
