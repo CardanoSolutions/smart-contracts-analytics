@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as points from './config/points.mjs';
 
-export const SINCE = points.?;
+export const SINCE = points.beginningOfDecember2024;
 
-export const UNTIL = null;
+export const UNTIL = points.beginningOfJanuary2025;
 
 export const OGMIOS_HOST = 'ws://127.0.0.1:1337';
 
