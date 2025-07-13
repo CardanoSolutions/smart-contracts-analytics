@@ -5,7 +5,7 @@ use std::{
     io::{self, BufRead},
     path::Path,
 };
-use uplc::ast::{DeBruijn, Program};
+use uplc::ast::{Constant, DeBruijn, Program, Term};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -315,10 +315,10 @@ fn main() {
             let hash: String = row.chars().take(56).collect();
             let cbor: String = row.chars().skip(57).collect();
 
-            let program = Program::<DeBruijn>::from_hex(&cbor, &mut Vec::new(), &mut Vec::new())
-                .unwrap()
-                .to_pretty()
-                .replace(['\n', ' '], "");
+            let program =
+                Program::<DeBruijn>::from_hex(&cbor, &mut Vec::new(), &mut Vec::new()).unwrap();
+
+            let program_str = program.to_pretty().replace(['\n', ' '], "");
 
             let delim = if is_first_validator { "[" } else { "," };
 
@@ -346,31 +346,37 @@ fn main() {
                 continue;
             }
 
-            if any_marker(&program, &plutus_tx_markers) {
-                println!("{delim}[\"{hash}\",\"plutus-tx\"]");
-                is_first_validator = false;
-                continue;
-            }
-
-            if any_marker(&program, &aiken_markers) {
+            if any_marker(&program_str, &aiken_markers) {
                 println!("{delim}[\"{hash}\",\"aiken\"]");
                 is_first_validator = false;
                 continue;
             }
 
-            if any_marker(&program, &helios_markers) {
+            if is_pluts(&program.term) {
+                println!("{delim}[\"{hash}\",\"plu-ts\"]");
+                is_first_validator = false;
+                continue;
+            }
+
+            if any_marker(&program_str, &helios_markers) {
                 println!("{delim}[\"{hash}\",\"helios\"]");
                 is_first_validator = false;
                 continue;
             }
 
-            if any_marker(&program, &opshin_markers) {
+            if any_marker(&program_str, &plutus_tx_markers) {
+                println!("{delim}[\"{hash}\",\"plutus-tx\"]");
+                is_first_validator = false;
+                continue;
+            }
+
+            if any_marker(&program_str, &opshin_markers) {
                 println!("{delim}[\"{hash}\",\"opshin\"]");
                 is_first_validator = false;
                 continue;
             }
 
-            if any_marker(&program, &plutarch_markers) {
+            if any_marker(&program_str, &plutarch_markers) {
                 println!("{delim}[\"{hash}\",\"plutarch\"]");
                 is_first_validator = false;
                 continue;
@@ -399,4 +405,32 @@ fn any_marker(program: &str, markers: &BTreeSet<&str>) -> bool {
         }
     }
     false
+}
+
+// identify a Plu-Ts marker, according to:
+//
+// -> https://github.com/HarmonicLabs/plu-ts/blob/73040becada7092ce7193467776775d72d8af392/src/IR/toUPLC/compileIRToUPLC.ts#L152-L167
+fn is_pluts(program: &Term<DeBruijn>) -> bool {
+    match program {
+        Term::Case { constr, branches } => {
+            let constr_marker = Term::Constr {
+                tag: 0,
+                fields: vec![],
+            };
+
+            if constr.as_ref() != &constr_marker || branches.len() != 2 {
+                return false;
+            }
+
+            let branch_marker = Constant::Integer(42.into());
+
+            match branches.last().unwrap() {
+                Term::Constant(cst) => cst.as_ref() == &branch_marker,
+                _ => false,
+            }
+        }
+        // Cope with parameter applications.
+        Term::Lambda { body, .. } => is_pluts(body),
+        _ => false,
+    }
 }
