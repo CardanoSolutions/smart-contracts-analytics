@@ -1,6 +1,7 @@
+import * as fs from 'node:fs';
 import blake2b from 'blake2b';
 import WebSocket from 'ws';
-import { UNTIL, SINCE, OGMIOS_HOST, NATIVE_SCRIPTS } from './config.mjs';
+import { UNTIL, SINCE, OGMIOS_HOST } from './config.mjs';
 
 const client = new WebSocket(OGMIOS_HOST);
 

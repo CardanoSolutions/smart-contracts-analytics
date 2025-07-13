@@ -6,4 +6,4 @@ edition = "2021"
 [dependencies]
 flat-rs = "0.0.27"
 hex = "0.4.3"
-uplc = "1.1.4"
+uplc = "1.1.17"

@@ -18,19 +18,19 @@ Adjust the `.envrc` to select Ogmios' source.
 ### Collecting mainnet scripts
 
 ```
-node collect-plutus-scripts.mjs 1>data/plutus_scripts.csv 2>data/native_scripts.json
+node collect-plutus-scripts.mjs 1>data/plutus_scripts.csv 2>data/native_scripts/YYYY_MM__YYYY_MM.json
 ```
 
 ### Collecting reference inputs
 
 ```
-node collect-reference-inputs.mjs 1>data/reference_inputs.json
+node collect-reference-inputs.mjs 1>data/reference_scripts/YYYY_MM__YYYY_MM.json
 ```
 
 ### Classifying validators
 
 ```
-cargo run --release -- data/plutus_scripts.csv 1>data/validators.json
+cargo run --release -- data/plutus_scripts.csv 1>data/validators/YYYY_MM__YYYY_MM.json
 ```
 
 ### Counting scripts usage on-chain

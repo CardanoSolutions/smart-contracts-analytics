@@ -2,14 +2,19 @@ import * as fs from 'fs';
 import blake2b from 'blake2b';
 import WebSocket from 'ws';
 import { bech32 } from 'bech32';
-import {
-  NATIVE_SCRIPTS,
-  OGMIOS_HOST,
-  REFERENCE_SCRIPTS,
-  SINCE,
-  UNTIL,
-  VALIDATORS,
-} from './config.mjs';
+import { OGMIOS_HOST, SINCE, UNTIL } from './config.mjs';
+
+const NATIVE_SCRIPTS = new Set(JSON.parse(fs.readFileSync(
+  `./data/native_scripts.json`
+)));
+
+const VALIDATORS = new Map(JSON.parse(fs.readFileSync(
+  `./data/validators.json`
+)));
+
+const REFERENCE_SCRIPTS = new Map(JSON.parse(fs.readFileSync(
+  `./data/reference_scripts.json`
+)));
 
 const KIND = {
   AIKEN: "aiken",
