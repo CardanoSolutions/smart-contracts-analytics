@@ -358,6 +358,12 @@ fn main() {
                 continue;
             }
 
+            if is_scalus(&program.term) {
+                println!("{delim}[\"{hash}\",\"scalus\"]");
+                is_first_validator = false;
+                continue;
+            }
+
             if any_marker(&program_str, &helios_markers) {
                 println!("{delim}[\"{hash}\",\"helios\"]");
                 is_first_validator = false;
@@ -432,5 +438,55 @@ fn is_pluts(program: &Term<DeBruijn>) -> bool {
         // Cope with parameter applications.
         Term::Lambda { body, .. } => is_pluts(body),
         _ => false,
+    }
+}
+
+// identify a Scalus marker, according to:
+//
+// -> https://github.com/scalus3/scalus/blob/master/scalus-core/shared/src/main/scala/scalus/uplc/ScalusTag.scala
+//
+// Scalus has used two shapes.
+//
+// Since 1.2.0 the marker is `[(error) (con integer 3)]`, placed on the first `(error)` node of
+// the optimised program. The argument of an application is never evaluated when the function
+// position is `error`, and an `(error)` node reached on a successful run would make the script
+// fail, so on any run that succeeds the marker costs no execution budget. `3` is Scalus's
+// compiler id in CIP-171. The node can sit anywhere in the term, so the whole term is walked.
+//
+// Scalus 1.0.0 and 1.1.x wrapped the program instead: `[(lam _ <program>) (con string "S")]` at
+// the root. Scripts with that shape are deployed on mainnet (Hydrozoa, among others), so it is
+// still recognised - at the root, beneath any parameter applications, like the Plu-Ts marker.
+fn is_scalus(program: &Term<DeBruijn>) -> bool {
+    is_scalus_legacy(program) || has_scalus_marker(program)
+}
+
+fn is_scalus_legacy(program: &Term<DeBruijn>) -> bool {
+    match program {
+        Term::Apply { function, argument } => {
+            let legacy_marker = Constant::String("S".to_string());
+            matches!(function.as_ref(), Term::Lambda { .. })
+                && matches!(argument.as_ref(), Term::Constant(cst) if cst.as_ref() == &legacy_marker)
+        }
+        // Cope with parameter applications.
+        Term::Lambda { body, .. } => is_scalus_legacy(body),
+        _ => false,
+    }
+}
+
+fn has_scalus_marker(term: &Term<DeBruijn>) -> bool {
+    match term {
+        Term::Apply { function, argument } => {
+            let marker = Constant::Integer(3.into());
+            let is_marker = matches!(function.as_ref(), Term::Error)
+                && matches!(argument.as_ref(), Term::Constant(cst) if cst.as_ref() == &marker);
+            is_marker || has_scalus_marker(function) || has_scalus_marker(argument)
+        }
+        Term::Lambda { body, .. } => has_scalus_marker(body),
+        Term::Delay(body) | Term::Force(body) => has_scalus_marker(body),
+        Term::Constr { fields, .. } => fields.iter().any(has_scalus_marker),
+        Term::Case { constr, branches } => {
+            has_scalus_marker(constr) || branches.iter().any(has_scalus_marker)
+        }
+        Term::Var(_) | Term::Constant(_) | Term::Error | Term::Builtin(_) => false,
     }
 }
